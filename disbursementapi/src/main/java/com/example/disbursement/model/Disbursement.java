@@ -60,8 +60,8 @@ public class Disbursement {
     private String narration;
 
     
-    // @Column("payment_details")
-    // private String paymentDetails;
+    @Column("payment_details")
+    private String paymentDetails;
 
     // public String getPaymentDetails() { return paymentDetails; }
     // public void setPaymentDetails(String paymentDetails) { this.paymentDetails = paymentDetails; }

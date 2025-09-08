@@ -24,12 +24,12 @@ import reactor.util.function.Tuples;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.r2dbc.postgresql.codec.Json;
+
 
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.Collections;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +75,8 @@ public class DisbursementService {
                 kycDetails.put("accountNumber", bank.getAccountNumber());
                 kycDetails.put("accountName", bank.getAccountName());
                 kycDetails.put("bankCode", bank.getBankCode());
+                kycDetails.put("bankName", bank.getBankName());
+                
             }
 
             try {
@@ -92,13 +94,23 @@ public class DisbursementService {
                         .flatMap(provider -> {
                             System.out.println("✅ Found Provider: " + provider);
 
-                
+                            String paymentDetailsJson;
+                            try {
+                                 paymentDetailsJson = mapper.writeValueAsString(kycDetails);
+
+                            } catch (JsonProcessingException e) {
+                                return Mono.error(new RuntimeException("Failed to serialize KYC details", e));
+                            }
+
+                            
+
                             // Insert Disbursement using DatabaseClient
                             return dbClient.sql("""
                                     INSERT INTO disbursements
-                                    (reference, transaction_id, customer_id, channel, amount, currency, status, provider_id, narration)
-                                    VALUES (:reference, :transactionId, :customerId, :channel, :amount, :currency, :status, :providerId, :narration)
-                                    RETURNING *
+                                        (reference, transaction_id, customer_id, channel, amount, currency, status, provider_id, narration, payment_details)
+                                        VALUES (:reference, :transactionId, :customerId, :channel, :amount, :currency, :status, :providerId, :narration, CAST(:payment_details AS jsonb))
+                                        RETURNING *
+        
                                     """)
                                 .bind("reference", req.getReference())
                                 .bind("transactionId", transactionId)
@@ -109,6 +121,7 @@ public class DisbursementService {
                                 .bind("status", "PENDING")
                                 .bind("providerId", UUID.fromString(provider.getId().toString()))
                                 .bind("narration", req.getNarration())
+                                .bind("payment_details", paymentDetailsJson)
                                 .map((row, meta) -> {
                                     Disbursement d = new Disbursement();
                                     d.setId(row.get("id", UUID.class));
@@ -121,11 +134,12 @@ public class DisbursementService {
                                     d.setStatus(DisbursementStatus.valueOf(row.get("status", String.class)));
                                     d.setProviderId(row.get("provider_id", String.class));
                                     d.setNarration(row.get("narration", String.class));
+                                    d.setPaymentDetails(row.get("payment_details", String.class));
                                     return d;
                                 })
                                 .one()
                                 .flatMap(savedDisbursement -> {
-                                    System.out.println("💾 Saved Disbursement ID: " + savedDisbursement.getId());
+                                    System.out.println("Saved Disbursement ID: " + savedDisbursement.getId());
 
                                     // cache idemKey
                                     return redis.opsForValue()
@@ -152,7 +166,7 @@ public class DisbursementService {
                                         .put("currency", savedDisbursement.getCurrency())
                                         .set("customer", customerNode);
 
-                                    System.out.println("📤 Outbox Event: " + evt);
+                                    System.out.println("Outbox Event: " + evt);
 
                                     return outbox.save(OutboxEvent.builder()
                                             .aggregateId(savedDisbursement.getId())
