@@ -1,0 +1,32 @@
+
+outbox.enabled: false
+server:
+  port: ${DISBURSEMENT_API:8081}
+
+spring:
+  application:
+    name: disbursementapi
+
+  r2dbc:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      group-id: disbursement-api-group
+      auto-offset-reset: earliest
+    producer:
+      retries: 3
+      acks: all
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+logging:
+  level:
+    org.springframework.r2dbc: DEBUG
+    org.springframework.kafka: INFO

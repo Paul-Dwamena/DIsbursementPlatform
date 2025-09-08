@@ -1,0 +1,22 @@
+server:
+  port: 8082  # different port from disbursement-api
+
+spring:
+  application:
+    name: reconciler
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: reconciler-group
+      auto-offset-reset: earliest
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  level:
+    org.springframework.kafka: INFO
+    org.springframework.data.redis: INFO

@@ -1,0 +1,25 @@
+server:
+  port: 8081 # unique port (different from disbursement-api 8080 and reconciler 8082)
+
+spring:
+  application:
+    name: dispatcher
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: dispatcher-group
+      auto-offset-reset: earliest
+    producer:
+      retries: 3
+      acks: all
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+logging:
+  level:
+    org.springframework.kafka: INFO
+    org.springframework.web.reactive: INFO
