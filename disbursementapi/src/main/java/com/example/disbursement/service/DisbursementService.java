@@ -2,11 +2,7 @@ package com.example.disbursement.service;
 
 import com.example.common.config.KafkaTopics;
 import com.example.common.exception.CustomNotFoundException;
-import com.example.common.util.MapToJsonConverter;
-import com.example.disbursement.dto.BankCustomerDetails;
-import com.example.disbursement.dto.CustomerDetails;
 import com.example.disbursement.dto.DisbursementRequest;
-import com.example.disbursement.dto.MomoCustomerDetails;
 import com.example.disbursement.model.*;
 import com.example.disbursement.repository.*;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -30,9 +26,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -40,53 +34,27 @@ import java.util.UUID;
 public class DisbursementService {
 
         private final DisbursementRepo repo;
-        private final CustomerRepo customerRepo;
+        
         private final PaymentProviderRepo providerRepo;
         private final OutboxRepo outbox;
         private final ReactiveStringRedisTemplate redis;
         private final BulkItemRepo bulkItemRepo;
         private final BulkDisbursementRepo bulkDisbursementRepo;
         private final TransactionalOperator txOperator;
+        private final CustomerCacheService customerCacheService;
         @Autowired
         private DatabaseClient dbClient;
 
         public Mono<Disbursement> createSingle(DisbursementRequest req) {
-    String idemKey = "idem:request:" + req.getReference();
-    ObjectMapper mapper = new ObjectMapper();
+        String idemKey = "idem:request:" + req.getReference();
+        ObjectMapper mapper = new ObjectMapper();
 
-    return redis.opsForValue().get(idemKey)
+        return redis.opsForValue().get(idemKey)
         .flatMap(existingId -> repo.findById(UUID.fromString(existingId))
             .switchIfEmpty(redis.opsForValue().delete(idemKey).then(Mono.<Disbursement>empty())))
         .switchIfEmpty(Mono.defer(() -> {
             UUID transactionId = UUID.randomUUID();
-
-            // Build Customer
-            CustomerDetails details = req.getCustomer();
-            Customer customer = new Customer();
-            customer.setName(details.getName());
-            customer.setPhone(details.getPhoneNumber());
-
-            // Build KYC details
-            Map<String, Object> kycDetails = new HashMap<>();
-            if ("MOMO".equalsIgnoreCase(req.getChannel()) && details instanceof MomoCustomerDetails momo) {
-                kycDetails.put("name", momo.getName());
-                kycDetails.put("phoneNumber", momo.getPhoneNumber());
-            } else if ("BANK".equalsIgnoreCase(req.getChannel()) && details instanceof BankCustomerDetails bank) {
-                kycDetails.put("accountNumber", bank.getAccountNumber());
-                kycDetails.put("accountName", bank.getAccountName());
-                kycDetails.put("bankCode", bank.getBankCode());
-                kycDetails.put("bankName", bank.getBankName());
-                
-            }
-
-            try {
-                customer.setKycDetails(mapper.writeValueAsString(kycDetails));
-            } catch (JsonProcessingException e) {
-                return Mono.error(new RuntimeException("Failed to serialize KYC details", e));
-            }
-
-            // Save Customer
-            return customerRepo.save(customer)
+            return customerCacheService.findOrCreate(req.getCustomer())
                 .flatMap(savedCustomer -> 
                     providerRepo.findByCode(req.getProvider())
                         .switchIfEmpty(Mono.error(new CustomNotFoundException(
@@ -96,14 +64,11 @@ public class DisbursementService {
 
                             String paymentDetailsJson;
                             try {
-                                 paymentDetailsJson = mapper.writeValueAsString(kycDetails);
+                                 paymentDetailsJson = mapper.writeValueAsString(req.getPaymentDetails());
 
                             } catch (JsonProcessingException e) {
                                 return Mono.error(new RuntimeException("Failed to serialize KYC details", e));
                             }
-
-                            
-
                             // Insert Disbursement using DatabaseClient
                             return dbClient.sql("""
                                     INSERT INTO disbursements
@@ -148,24 +113,24 @@ public class DisbursementService {
                                 })
                                 .flatMap(savedDisbursement -> {
 
-                                ObjectNode customerNode = mapper.valueToTree(savedCustomer);
-                                if (savedCustomer.getKycDetails() != null) {
-                                try {
-                                        ObjectNode kycNode = (ObjectNode) mapper.readTree(savedCustomer.getKycDetails());
-                                        customerNode.set("kycDetails", kycNode);
-                                } catch (JsonProcessingException e) {
-                                        return Mono.error(new RuntimeException("Failed to parse KYC JSON", e));
-                                }
-                                }
-                                    // Build Outbox Event
-                                    ObjectNode evt = JsonNodeFactory.instance.objectNode()
-                                        .put("disbursementId", savedDisbursement.getId().toString())
-                                        .put("reference", savedDisbursement.getReference())
-                                        .put("channel", savedDisbursement.getChannel().name())
-                                        .put("amount", savedDisbursement.getAmount().toPlainString())
-                                        .put("currency", savedDisbursement.getCurrency())
-                                        .set("customer", customerNode);
+                                    ObjectNode customerNode = mapper.createObjectNode()
+                                    .put("id", savedCustomer.getId().toString())
+                                    .put("name", savedCustomer.getName())
+                                    .put("phone", savedCustomer.getPhone())
+                                    .set("paymentDetails", mapper.valueToTree(req.getPaymentDetails()));
 
+                                ObjectNode evt = JsonNodeFactory.instance.objectNode()
+                                    .put("disbursementId", savedDisbursement.getId().toString())
+                                    .put("reference", savedDisbursement.getReference())
+                                    .put("channel", savedDisbursement.getChannel().name())
+                                    .put("amount", savedDisbursement.getAmount().toPlainString())
+                                    .put("currency", savedDisbursement.getCurrency())
+                                    .put("provider", savedDisbursement.getProviderId())
+                                    .set("customer", customerNode);
+
+                                
+                                    // Build Outbox Event
+                                    
                                     System.out.println("Outbox Event: " + evt);
 
                                     return outbox.save(OutboxEvent.builder()

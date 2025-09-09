@@ -1,24 +1,30 @@
 package com.example.dispatcher.service;
-import com.example.disbursement.model.Disbursement;
-import lombok.Value;
-import java.math.BigDecimal;
 
+import lombok.Value;
+
+import java.math.BigDecimal;
+import java.util.Map;
 
 @Value
 public class ProviderRequest {
+
     String disbursementId;
-    String account;
+    String reference;
+    String transactionId;
     BigDecimal amount;
     String currency;
+    Map<String, Object> customer;
 
-    public static ProviderRequest from(Disbursement d) {
+   
+    public static ProviderRequest from(Map<String, Object> evt) {
+        // evt is your Kafka payload JSON converted to Map
         return new ProviderRequest(
-            d.getId().toString(),
-            d.getCustomerId(),
-            d.getAmount(),
-            d.getCurrency()
+                (String) evt.get("disbursementId"),
+                (String) evt.get("transactionId"),
+                (String) evt.get("reference"),
+                new BigDecimal(evt.get("amount").toString()),
+                (String) evt.get("currency"),
+                (Map<String, Object>) evt.get("customer")
         );
     }
-    
-    
 }

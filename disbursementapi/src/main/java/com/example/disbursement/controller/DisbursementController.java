@@ -3,8 +3,6 @@ package com.example.disbursement.controller;
 import com.example.disbursement.dto.DisbursementRequest;
 import com.example.disbursement.model.BulkDisbursement;
 import com.example.disbursement.model.Disbursement;
-import com.example.disbursement.model.PaymentChannel;
-import com.example.disbursement.model.PaymentProvider;
 import com.example.disbursement.service.DisbursementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -41,6 +39,18 @@ public class DisbursementController {
     @GetMapping("/test")
     public String test() {
         return "Hello";
+    }
+
+     @PostMapping("/callback")
+    public String handleCallback(@RequestBody String payload) {
+        System.out.println("📩 Callback received: " + payload);
+        // You can parse payload into a DTO if you know the structure
+        return "Callback received successfully";
+    }
+
+    @GetMapping("/callback")
+    public String testCallback() {
+        return "Callback endpoint is up!";
     }
 
     @GetMapping(produces = MediaType.APPLICATION_NDJSON_VALUE)

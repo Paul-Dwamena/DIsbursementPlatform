@@ -15,21 +15,28 @@ public class MtnEndPointService {
 
     private final WebClient webClient;
     private final String targetEnvironment;
+    private final String subscriptionKey;  // <-- add this
 
     public MtnEndPointService(WebClient mtnWebClient,
-            @Value("${mtn.sandbox.targetEnvironment}") String targetEnvironment) {
+                              @Value("${mtn.sandbox.targetEnvironment}") String targetEnvironment,
+                              @Value("${mtn.sandbox.subscriptionKey}") String subscriptionKey) {
         this.webClient = mtnWebClient;
         this.targetEnvironment = targetEnvironment;
+        this.subscriptionKey = subscriptionKey;
     }
 
-    public Mono<Map<String, Object>> depositV1(Map<String, Object> payload, String token) {
-        return post("/v1_0/deposit", payload, token);
+    public Mono<Map<String, Object>> depositV1(Map<String, Object> payload, String token,
+                                           String callbackUrl, String referenceId) {
+    return post("/v1_0/deposit", payload, token, callbackUrl, referenceId);
     }
 
-    public Mono<Map<String, Object>> depositV2(Map<String, Object> payload, String token) {
-        return post("/v2_0/deposit", payload, token);
+    public Mono<Map<String, Object>> depositV2(Map<String, Object> payload, String token,
+                                           String callbackUrl, String referenceId) {
+    return post("/v2_0/deposit", payload, token, callbackUrl, referenceId);
     }
 
+
+    
     public Mono<Map<String, Object>> transfer(Map<String, Object> payload, String token) {
         return post("/v1_0/transfer", payload, token);
     }
@@ -39,7 +46,7 @@ public class MtnEndPointService {
     }
 
     public Mono<Map<String, Object>> getAccountDetails(String token, String accountHolderIdType,
-            String accountHolderId) {
+                                                       String accountHolderId) {
         String uri = String.format("/v1_0/accountholder/%s/%s/basicuserinfo", accountHolderIdType, accountHolderId);
         return get(uri, token);
     }
@@ -49,7 +56,7 @@ public class MtnEndPointService {
     }
 
     public Mono<Map<String, Object>> getPaymentStatus(String referenceId, String status, String token) {
-        return get("/v1_0/" + status + referenceId, token);
+        return get("/v1_0/" + status + "/" + referenceId, token);
     }
 
     private Mono<Map<String, Object>> post(String uri, Map<String, Object> payload, String token) {
@@ -57,11 +64,12 @@ public class MtnEndPointService {
     }
 
     private Mono<Map<String, Object>> post(String uri, Map<String, Object> payload, String token,
-            String callbackUrl, String referenceId) {
+                                           String callbackUrl, String referenceId) {
         return webClient.post()
                 .uri(uri)
                 .headers(headers -> {
                     headers.setBearerAuth(token);
+                    headers.add("Ocp-Apim-Subscription-Key", subscriptionKey); // ✅ fixed
                     headers.add("X-Target-Environment", targetEnvironment);
                     if (callbackUrl != null)
                         headers.add("X-Callback-Url", callbackUrl);
@@ -71,8 +79,7 @@ public class MtnEndPointService {
                 })
                 .bodyValue(payload)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
-                });
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {});
     }
 
     private Mono<Map<String, Object>> get(String uri, String token) {
@@ -84,6 +91,7 @@ public class MtnEndPointService {
                 .uri(uri)
                 .headers(headers -> {
                     headers.setBearerAuth(token);
+                    headers.add("Ocp-Apim-Subscription-Key", subscriptionKey); // ✅ fixed
                     headers.add("X-Target-Environment", targetEnvironment);
                     if (callbackUrl != null)
                         headers.add("X-Callback-Url", callbackUrl);
@@ -92,7 +100,6 @@ public class MtnEndPointService {
                     headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
                 })
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
-                });
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {});
     }
 }

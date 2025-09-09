@@ -1,5 +1,13 @@
+mtn:
+  sandbox:
+    apiUserId: bd9d6825-bc2f-4dbe-b357-c9bf47c3dc16
+    apiKey: 23712f2c7be54b879ecd17a333b0c6cf
+    targetEnvironment: sandbox
+    baseUrl: https://sandbox.momodeveloper.mtn.com/disbursement
+    subscriptionKey: b88dfe2c8565489a9747f57eda401efd
+
 server:
-  port: 8081 # unique port (different from disbursement-api 8080 and reconciler 8082)
+  port: 8082
 
 spring:
   application:

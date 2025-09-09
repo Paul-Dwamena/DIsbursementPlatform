@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class BankCustomerDetails implements CustomerDetails {
+public class BankPaymentDetails implements PaymentDetails {
 
     @NotBlank
     private String accountNumber;
@@ -17,10 +17,4 @@ public class BankCustomerDetails implements CustomerDetails {
 
     private String bankCode;
 
-
-    @NotBlank
-    private String name;
-
-    @NotBlank
-    private String phoneNumber;
 }

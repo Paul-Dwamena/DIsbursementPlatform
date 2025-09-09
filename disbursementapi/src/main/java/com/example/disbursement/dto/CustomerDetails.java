@@ -1,18 +1,16 @@
 package com.example.disbursement.dto;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "type"   // This field must exist in JSON
-)
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = MomoCustomerDetails.class, name = "MOMO"),
-    @JsonSubTypes.Type(value = BankCustomerDetails.class, name = "BANK")
-})
-public interface CustomerDetails {
-    String getName();
-    String getPhoneNumber();
+@Data
+public class CustomerDetails {
+
+    @NotBlank
+    private String name;
+
+    @NotBlank
+    private String phoneNumber;
+
+    private String email;
 }

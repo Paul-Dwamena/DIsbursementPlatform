@@ -15,7 +15,7 @@ import java.util.Map;
 
 
 @Configuration
-public class KafkaConfig {
+public class DispatcherKafkaConfig {
 
     @Bean
     public ReceiverOptions<String, String> receiverOptions() {

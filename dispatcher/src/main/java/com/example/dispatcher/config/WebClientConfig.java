@@ -14,15 +14,15 @@ public class WebClientConfig {
         return builder.baseUrl(mtnBaseUrl).build();
     }
 
-    @Bean
-    public WebClient telecelWebClient(WebClient.Builder builder,
-                                      @Value("${telecel.sandbox.baseUrl}") String telecelBaseUrl) {
-        return builder.baseUrl(telecelBaseUrl).build();
-    }
+    // @Bean
+    // public WebClient telecelWebClient(WebClient.Builder builder,
+    //                                   @Value("${telecel.sandbox.baseUrl}") String telecelBaseUrl) {
+    //     return builder.baseUrl(telecelBaseUrl).build();
+    // }
 
-    @Bean
-    public WebClient airtelWebClient(WebClient.Builder builder,
-                                     @Value("${airtel.sandbox.baseUrl}") String airtelBaseUrl) {
-        return builder.baseUrl(airtelBaseUrl).build();
-    }
+    // @Bean
+    // public WebClient airtelWebClient(WebClient.Builder builder,
+    //                                  @Value("${airtel.sandbox.baseUrl}") String airtelBaseUrl) {
+    //     return builder.baseUrl(airtelBaseUrl).build();
+    // }
 }

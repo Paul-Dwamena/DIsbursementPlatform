@@ -5,6 +5,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.example.dispatcher.dto.TokenResponse;
+
 import reactor.core.publisher.Mono;
 
 import java.util.Base64;
@@ -24,23 +27,29 @@ public class MtnAuthService {
     @Value("${mtn.sandbox.targetEnvironment}")
     private String targetEnvironment;
 
+
+    @Value("${mtn.sandbox.subscriptionKey}")
+    private String subscriptionKey;
+
+
     
     public MtnAuthService(WebClient mtnWebClient) {
         this.webClient = mtnWebClient;
     }
 
     
-    public Mono<String> createAccessToken() {
+    public Mono<TokenResponse> createAccessToken() {
         String basicAuth = Base64.getEncoder()
                 .encodeToString((apiUserId + ":" + apiKey).getBytes());
 
+    
         return webClient.post()
                 .uri("/token/")
                 .header(HttpHeaders.AUTHORIZATION, "Basic " + basicAuth)
+                .header("Ocp-Apim-Subscription-Key", subscriptionKey)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .bodyToMono(Map.class)
-                .map(map -> (String) map.get("access_token"));
+                .bodyToMono(TokenResponse.class);
     }
 
 
