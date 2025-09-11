@@ -15,7 +15,7 @@ public class MtnEndPointService {
 
     private final WebClient webClient;
     private final String targetEnvironment;
-    private final String subscriptionKey;  // <-- add this
+    private final String subscriptionKey;  
 
     public MtnEndPointService(WebClient mtnWebClient,
                               @Value("${mtn.sandbox.targetEnvironment}") String targetEnvironment,
@@ -37,12 +37,12 @@ public class MtnEndPointService {
 
 
     
-    public Mono<Map<String, Object>> transfer(Map<String, Object> payload, String token) {
-        return post("/v1_0/transfer", payload, token);
+    public Mono<Map<String, Object>> transfer(Map<String, Object> payload, String token, String callbackUrl, String referenceId) {
+        return post("/v1_0/transfer", payload, token, callbackUrl, referenceId);
     }
 
-    public Mono<Map<String, Object>> refund(Map<String, Object> payload, String token) {
-        return post("/v1_0/refund", payload, token);
+    public Mono<Map<String, Object>> refund(Map<String, Object> payload, String token, String callbackUrl, String referenceId) {
+        return post("/v2_0/refund", payload, token, callbackUrl, referenceId);
     }
 
     public Mono<Map<String, Object>> getAccountDetails(String token, String accountHolderIdType,
@@ -69,7 +69,7 @@ public class MtnEndPointService {
                 .uri(uri)
                 .headers(headers -> {
                     headers.setBearerAuth(token);
-                    headers.add("Ocp-Apim-Subscription-Key", subscriptionKey); // ✅ fixed
+                    headers.add("Ocp-Apim-Subscription-Key", subscriptionKey); 
                     headers.add("X-Target-Environment", targetEnvironment);
                     if (callbackUrl != null)
                         headers.add("X-Callback-Url", callbackUrl);
@@ -91,7 +91,7 @@ public class MtnEndPointService {
                 .uri(uri)
                 .headers(headers -> {
                     headers.setBearerAuth(token);
-                    headers.add("Ocp-Apim-Subscription-Key", subscriptionKey); // ✅ fixed
+                    headers.add("Ocp-Apim-Subscription-Key", subscriptionKey); 
                     headers.add("X-Target-Environment", targetEnvironment);
                     if (callbackUrl != null)
                         headers.add("X-Callback-Url", callbackUrl);

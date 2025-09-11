@@ -14,7 +14,7 @@ import java.util.UUID;
 
 
 @Data
-@Builder
+@Builder(toBuilder = true) 
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("bulk_disbursements")

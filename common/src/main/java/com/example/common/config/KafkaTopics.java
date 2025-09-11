@@ -7,4 +7,5 @@ public final class KafkaTopics {
     public static final String PAYOUT_REQUESTED = "payout.requested.v1";
     public static final String PAYOUT_STATUS   = "payout.status.v1";
     public static final String PAYOUT_DLQ      = "payout.requested.v1.dlq";
+    public static final String REFUND_REQUESTED = "refund.requested.v1";
 }

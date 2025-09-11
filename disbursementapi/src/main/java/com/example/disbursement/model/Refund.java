@@ -10,7 +10,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -19,35 +18,28 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("disbursements")
-public class Disbursement {
+@Table("refunds")
+public class Refund {
 
     @Id
     private UUID id;
 
     private String reference;
 
+    @Column("original_disbursement_id")
+    private UUID originalDisbursementId;
 
     @Column("transaction_id")
     private UUID transactionId;
-
-    @Column("customer_id")
-    private UUID customerId;
-
-    @Column("disburse_type")
-    private String  disburseType;
-
-    private PaymentChannel channel;
 
     private BigDecimal amount;
 
     private String currency;
 
-    private DisbursementStatus status;
+    private RefundStatus status;
 
     @Column("provider_id")
     private UUID providerId;
-
 
     @Column("provider_ref")
     private String providerRef;
@@ -60,12 +52,6 @@ public class Disbursement {
 
     private String narration;
 
-    
-    @Column("payment_details")
-    private String paymentDetails;
-
-
-
     @CreatedDate
     @Column("created_at")
     private OffsetDateTime createdAt;
@@ -74,7 +60,7 @@ public class Disbursement {
     @Column("updated_at")
     private OffsetDateTime updatedAt;
 
-    public Disbursement(UUID id, DisbursementStatus status, String providerRef) {
+    public Refund(UUID id, RefundStatus status, String providerRef) {
         this.id = id;
         this.status = status;
         this.providerRef = providerRef;

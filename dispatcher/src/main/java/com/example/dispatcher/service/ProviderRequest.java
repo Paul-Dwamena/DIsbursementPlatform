@@ -14,17 +14,18 @@ public class ProviderRequest {
     BigDecimal amount;
     String currency;
     Map<String, Object> customer;
+    String disburse_type;
 
    
     public static ProviderRequest from(Map<String, Object> evt) {
-        // evt is your Kafka payload JSON converted to Map
         return new ProviderRequest(
                 (String) evt.get("disbursementId"),
-                (String) evt.get("transactionId"),
                 (String) evt.get("reference"),
+                (String) evt.get("transactionId"),   
                 new BigDecimal(evt.get("amount").toString()),
                 (String) evt.get("currency"),
-                (Map<String, Object>) evt.get("customer")
+                (Map<String, Object>) evt.get("customer"),
+                (String) evt.get("disburse_type")
         );
     }
 }

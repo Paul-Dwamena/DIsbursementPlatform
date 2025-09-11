@@ -4,7 +4,6 @@ import com.example.disbursement.model.OutboxEvent;
 import com.example.disbursement.repository.OutboxRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
