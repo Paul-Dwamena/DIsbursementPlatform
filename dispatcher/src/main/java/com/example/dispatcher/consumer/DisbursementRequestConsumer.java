@@ -2,6 +2,7 @@ package com.example.dispatcher.consumer;
 
 import com.example.dispatcher.provider.PayoutProvider;
 import com.example.dispatcher.provider.momo.mtn.MtnDisburseAdapter;
+import com.example.dispatcher.provider.momo.telecel.TelecelAdapter;
 import com.example.dispatcher.service.ProviderRequest;
 import com.example.dispatcher.service.ProviderResult;
 import com.example.disbursement.model.Disbursement;
@@ -49,11 +50,15 @@ public class DisbursementRequestConsumer {
     private MtnDisburseAdapter momoMtnProvider;
 
     @Autowired
+    private TelecelAdapter telecelProvider;
+
+    @Autowired
     private DatabaseClient dbClient;
 
     @PostConstruct
     public void initProviders() {
         providersByChannel.put("MOMO_MTN", momoMtnProvider);
+        providersByChannel.put("MOMO_TELECEL", telecelProvider);
     }
 
     @PostConstruct

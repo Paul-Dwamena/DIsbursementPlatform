@@ -136,6 +136,7 @@ public class DisbursementService {
                                     .put("currency", savedDisbursement.getCurrency())
                                     .put("provider", savedDisbursement.getProviderId().toString())
                                     .put("disburse_type", savedDisbursement.getDisburseType())
+                                    .put("narration", savedDisbursement.getNarration())
                                     .set("customer", customerNode);
 
                                 

@@ -44,7 +44,7 @@ public class MtnDisburseAdapter implements PayoutProvider {
                         "partyIdType", "MSISDN",
                         "partyId", paymentDetails.get("momoNumber")
                 ),
-                "payerMessage", "Payment from Dispatcher",
+                "payerMessage", req.getNarration(),
                 "payeeNote", "Payment received"
             );
         } else if ("transfer".equalsIgnoreCase(req.getDisburse_type())) {
@@ -57,7 +57,7 @@ public class MtnDisburseAdapter implements PayoutProvider {
                         "partyId", paymentDetails.get("momoNumber"),
                         "partyCode", paymentDetails.get("partyCode")
                 ),
-                "payerMessage", "Payment from Dispatcher",
+                "payerMessage", req.getNarration(),
                 "payeeNote", "Payment received"
             );
         } else {

@@ -15,6 +15,7 @@ public class ProviderRequest {
     String currency;
     Map<String, Object> customer;
     String disburse_type;
+    String narration;
 
    
     public static ProviderRequest from(Map<String, Object> evt) {
@@ -25,7 +26,8 @@ public class ProviderRequest {
                 new BigDecimal(evt.get("amount").toString()),
                 (String) evt.get("currency"),
                 (Map<String, Object>) evt.get("customer"),
-                (String) evt.get("disburse_type")
+                (String) evt.get("disburse_type"),
+                (String) evt.get("narration")
         );
     }
 }

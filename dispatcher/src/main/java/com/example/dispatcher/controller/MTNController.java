@@ -4,6 +4,7 @@ import com.example.dispatcher.consumer.DisbursementRequestConsumer;
 import com.example.dispatcher.provider.momo.mtn.MtnDisburseAdapter;
 import com.example.dispatcher.provider.momo.mtn.MtnAuthService;
 import com.example.dispatcher.provider.momo.mtn.MtnTokenService;
+import com.example.dispatcher.provider.momo.telecel.TelecelSessionService;
 import com.example.dispatcher.service.ProviderRequest;
 import com.example.dispatcher.service.ProviderResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,16 +21,18 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/mtn")
-public class DispatcherController {
+public class MTNController {
 
     private final MtnAuthService mtnAuthService;
     private final MtnTokenService mtnTokenService;
     private final MtnEndPointService mtnEndPointService;
     private final MtnDisburseAdapter mtnDisburseAdapter;
     private final DisbursementRequestConsumer requestedConsumer;
+   
 
-    public DispatcherController(MtnAuthService mtnAuthService,
+    public MTNController(MtnAuthService mtnAuthService,
                                 MtnTokenService mtnTokenService,
+                                TelecelSessionService telecelSessionService,
                                 MtnEndPointService mtnEndPointService,
                                 MtnDisburseAdapter mtnDisburseAdapter,
                                 DisbursementRequestConsumer requestedConsumer) {
@@ -38,6 +41,7 @@ public class DispatcherController {
         this.mtnEndPointService = mtnEndPointService;
         this.mtnDisburseAdapter = mtnDisburseAdapter;
         this.requestedConsumer = requestedConsumer;
+       
     }
 
     // =================== TOKENS ===================
@@ -71,17 +75,7 @@ public class DispatcherController {
                 .flatMap(token -> mtnEndPointService.depositV2(payload, token, callbackUrl, referenceId));
     }
 
-    // @PostMapping("/transfer")
-    // public Mono<Map<String, Object>> transfer(@RequestBody Map<String, Object> payload) {
-    //     return mtnTokenService.getAccessToken()
-    //             .flatMap(token -> mtnEndPointService.transfer(payload, token));
-    // }
-
-    // @PostMapping("/refund")
-    // public Mono<Map<String, Object>> refund(@RequestBody Map<String, Object> payload) {
-    //     return mtnTokenService.getAccessToken()
-    //             .flatMap(token -> mtnEndPointService.refund(payload, token));
-    // }
+   
 
     @GetMapping("/account/basicinfo")
     public Mono<Map<String, Object>> getAccountDetails(
@@ -130,5 +124,7 @@ public class DispatcherController {
                             .body("Error: " + ex.getMessage()));
                 });
     }
+
+  
 
 }

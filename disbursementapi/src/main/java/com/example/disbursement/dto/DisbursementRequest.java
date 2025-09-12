@@ -11,9 +11,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
-
-
 @Data
 public class DisbursementRequest {
 
@@ -22,7 +19,6 @@ public class DisbursementRequest {
 
     @NotBlank
     private String disburseType;
-
 
     @NotNull
     private CustomerDetails customer;
@@ -33,10 +29,8 @@ public class DisbursementRequest {
     @NotBlank
     private String narration;
 
-    
     @NotBlank
     private String channel;
-
 
     @NotNull
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
@@ -45,7 +39,7 @@ public class DisbursementRequest {
     @NotBlank
     private String currency;
 
-     private PaymentDetails paymentDetails;
+    private PaymentDetails paymentDetails;
 
     @JsonCreator
     public DisbursementRequest(
@@ -57,8 +51,7 @@ public class DisbursementRequest {
             @JsonProperty("channel") String channel,
             @JsonProperty("amount") BigDecimal amount,
             @JsonProperty("currency") String currency,
-            @JsonProperty("paymentDetails") JsonNode paymentDetailsNode
-    ) throws JsonProcessingException {
+            @JsonProperty("paymentDetails") JsonNode paymentDetailsNode) throws JsonProcessingException {
         this.reference = reference;
         this.disburseType = disburseType;
         this.customer = customer;
@@ -71,23 +64,35 @@ public class DisbursementRequest {
         ObjectMapper mapper = new ObjectMapper();
 
         if ("BANK".equalsIgnoreCase(channel)) {
+            // Bank disbursement
             this.paymentDetails = mapper.treeToValue(paymentDetailsNode, BankPaymentDetails.class);
 
         } else if ("MOMO".equalsIgnoreCase(channel)) {
-            if ("deposit".equalsIgnoreCase(disburseType)) {
-                this.paymentDetails = mapper.treeToValue(paymentDetailsNode, MomoPaymentDetails.class);
-            } else if ("transfer".equalsIgnoreCase(disburseType)) {
-                this.paymentDetails = mapper.treeToValue(paymentDetailsNode, B2BDisbursementRequest.class);
+            // MOMO disbursement, check provider
+            if ("MTN".equalsIgnoreCase(provider)) {
+                if ("deposit".equalsIgnoreCase(disburseType)) {
+                    this.paymentDetails = mapper.treeToValue(paymentDetailsNode, MomoPaymentDetails.class);
+                } else if ("transfer".equalsIgnoreCase(disburseType)) {
+                    this.paymentDetails = mapper.treeToValue(paymentDetailsNode, B2BDisbursementRequestMTN.class);
+                } else {
+                    throw new IllegalArgumentException("Unsupported disburseType for MTN MOMO: " + disburseType);
+                }
+            } else if ("TELECEL".equalsIgnoreCase(provider)) {
+                if ("deposit".equalsIgnoreCase(disburseType)) {
+                    this.paymentDetails = mapper.treeToValue(paymentDetailsNode, B2CTelecelRequest.class);
+                } else if ("transfer".equalsIgnoreCase(disburseType)) {
+                    this.paymentDetails = mapper.treeToValue(paymentDetailsNode, B2BTelecelRequest.class);
+                } else {
+                    throw new IllegalArgumentException("Unsupported disburseType for TELECEL MOMO: " + disburseType);
+                }
             } else {
-                throw new IllegalArgumentException("Unsupported disburseType for MOMO: " + disburseType);
+                throw new IllegalArgumentException("Unsupported MOMO provider: " + provider);
             }
 
         } else {
             throw new IllegalArgumentException("Unsupported channel: " + channel);
         }
-   
-    }
-    
 
-    
+    }
+
 }
